@@ -60,8 +60,40 @@ var app = app || {};
 		},
 
 		toggle: function (todoToToggle) {
-			this.props.model.toggle(todoToToggle);
+			if (!todoToToggle.completed) {
+				this.sendBurst().then((response) => {
+					console.log(response);
+					this.props.model.toggle(todoToToggle);
+				});
+			} else {
+				this.props.model.toggle(todoToToggle);
+			}
 		},
+
+
+		sendBurst: function() {
+
+			const api = b$.composeApi({
+				nodeHost: "http://testnet.getburst.net:6876",
+				apiRootUrl: "/burst"
+			});
+
+			const recipientAddress = 'BURST-WQJC-854G-2LQT-8T8EA';
+
+			const senderPassphrase = 'password123'; // BURST-9CVF-6DTE-ST5Q-GTDYA
+
+			const keys = b$crypto.generateMasterKeys(senderPassphrase);
+
+			return api.transaction.sendMoney({
+				// NOTE: amountNQT is actually in burst
+				amountNQT: '1',
+				feeNQT: '0.08',
+				deadline: 24 * 60, // 24 hours
+				type: 1
+			  }, keys.publicKey, keys.signPrivateKey, recipientAddress);
+	 
+		},
+		
 
 		destroy: function (todo) {
 			this.props.model.destroy(todo);
